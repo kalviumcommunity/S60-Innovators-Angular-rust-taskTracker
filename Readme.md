@@ -3,7 +3,7 @@
 ## What Angular Components Do
 Angular components are reusable UI blocks that display content and handle user interactions. Each component manages its template (HTML), logic (TypeScript), and styling. Components are the building blocks of the entire Angular application—they display tasks, forms, and buttons to users.
 
-## What Angular Services Do
+## What Angular Services Do :
 Angular services encapsulate business logic and manage communication with the backend. Services handle API requests, share data between components, and keep code DRY (Don't Repeat Yourself). Multiple components can use the same service to access backend data.
 
 ## How Angular HttpClient Works (Request → Response)
