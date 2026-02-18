@@ -1,71 +1,153 @@
-# TaskTrack – Full-Stack Architecture Overview
+# Angular Frontend – Task Manager UI
 
-## What Angular Components Do
-Angular components are reusable UI blocks that display content and handle user interactions. Each component manages its template (HTML), logic (TypeScript), and styling. Components are the building blocks of the entire Angular application—they display tasks, forms, and buttons to users.
+## Overview
 
-## What Angular Services Do :
-Angular services encapsulate business logic and manage communication with the backend. Services handle API requests, share data between components, and keep code DRY (Don't Repeat Yourself). Multiple components can use the same service to access backend data.
+This Angular application serves as the frontend for the Task Manager system.  
+It communicates with a Rust backend built using Actix-Web and PostgreSQL.
 
-## How Angular HttpClient Works (Request → Response)
-1. Component calls Service method
-2. Service uses HttpClient.post/get/put/delete() to send HTTP request
-3. Request travels to backend API with JSON data
-4. Backend processes and returns JSON response
-5. HttpClient delivers response as an Observable stream
-6. Component receives data and updates UI
+The purpose of this task is to demonstrate:
 
-## What Rust Backend APIs Do
-The Rust backend receives HTTP requests from the frontend and processes them. It:
-- **Validates** incoming data (ensures title isn't empty, length limits)
-- **Executes business logic** (checks permissions, calculations)
-- **Queries the database** to fetch or store data
-- **Returns JSON responses** with status codes (200, 201, 404, etc.)
+- Understanding of Angular components
+- Use of services for API communication
+- Frontend to backend interaction
+- Modular architecture design
+- Clear separation of concerns
 
-## How PostgreSQL Fits In
-PostgreSQL stores all persistent data (tasks, user info, etc.) in tables. The backend queries PostgreSQL using SQL, retrieves data, and sends it back to the frontend as JSON. The database guarantees data integrity and handles concurrent requests safely.
+---
 
-## Full Request Lifecycle (Frontend → Backend → Database → UI)
+## 1. Explanation of Angular Components
 
-**Example: User creates a new task**
+In Angular, a component controls a part of the user interface.
 
-1. User types task title in Angular form and clicks "Create"
-2. Component validates input (not empty, correct length)
-3. Component calls TaskService.createTask(taskData)
-4. Service uses HttpClient to POST request to /api/tasks endpoint
-5. **HTTP Request sent:** POST /api/tasks with JSON body {"title": "Buy milk"}
-6. Rust backend receives request at handler function
-7. Handler validates data again (defense in depth)
-8. Handler executes SQL: INSERT INTO tasks (title, ...) VALUES ('Buy milk', ...)
-9. PostgreSQL creates new row, assigns ID, returns full task object
-10. Rust handler formats response as JSON: {"status": "success", "data": {...}}
-11. Handler sends HTTP 201 Created response with JSON body
-12. HttpClient receives response, emits as Observable
-13. Component subscribes, receives new task data
-14. Component updates tasks array: this.tasks.push(newTask)
-15. Angular detects change, re-renders template
-16. **User sees new task in the list**
+Each component contains:
+- A template (HTML)
+- Logic (TypeScript)
+- Styles (CSS)
 
-## System Architecture Diagram
+In this project, the main component is the **TasksComponent**.
 
-```
-┌─────────────────────────────────────────┐
-│      ANGULAR FRONTEND (Browser)         │
-│  Components ←→ Services ←→ HttpClient   │
-└──────────────────┬──────────────────────┘
-                   │ HTTP/JSON
-┌──────────────────▼──────────────────────┐
-│       RUST BACKEND API (Axum)           │
-│  Routes ←→ Handlers ←→ Validation       │
-└──────────────────┬──────────────────────┘
-                   │ SQL Queries
-┌──────────────────▼──────────────────────┐
-│    POSTGRESQL DATABASE (Persistent)     │
-│          Tasks Table with Data          │
-└─────────────────────────────────────────┘
-```
+The TasksComponent is responsible for:
 
-![Architecture Diagram](./architecture.png)
+- Displaying the list of tasks
+- Handling user input
+- Triggering API calls through the service
+- Automatically updating the UI when data changes
 
-## Key Takeaway
+The component does not directly communicate with the backend.  
+Instead, it delegates API communication to a service.
 
-Data flows in a cycle: **User Action → Component → Service → HTTP Request → Rust Handler → SQL Query → Database → Response JSON → Service → Component → UI Update**. Each layer has one responsibility, making the system maintainable and scalable.
+This keeps the UI logic clean and focused.
+
+---
+
+## 2. Explanation of Angular Services
+
+Services in Angular are used to handle:
+
+- API communication
+- Business logic
+- Shared data management
+
+In this project, the **TaskService** is responsible for:
+
+- Sending HTTP GET requests to fetch tasks
+- Sending HTTP POST requests to create tasks
+- Returning observable responses to the component
+
+The component subscribes to the service responses and updates its internal state.
+
+This separation improves maintainability and reusability.
+
+---
+
+## 3. Simple UI Feature Implemented
+
+The implemented feature is:
+
+### Add and View Tasks
+
+The UI allows users to:
+
+- View all tasks stored in the database
+- Add a new task using an input field
+- Automatically refresh the task list after insertion
+
+When a user adds a task:
+
+1. The component captures user input.
+2. The service sends a POST request to the Rust backend.
+3. The backend stores the task in PostgreSQL.
+4. The component reloads the updated list.
+5. The UI updates automatically.
+
+This demonstrates full frontend-backend integration.
+
+---
+
+## 4. Angular → Rust Interaction Diagram
+
+User Action (Click Button)\
+↓\
+Angular Component\
+↓\
+Task Service\
+↓\
+HTTP Request (/tasks)\
+↓\
+Rust Route\
+↓\
+Rust Handler\
+↓\
+PostgreSQL Database\
+↓\
+JSON Response\
+↓\
+Angular Component Updates UI
+
+
+This follows a three-layer architecture:
+
+- Presentation Layer (Angular)
+- Application Layer (Rust Backend)
+- Data Layer (PostgreSQL)
+
+---
+
+## 5. Case Study
+
+Scenario: A user clicks “View Tasks”.
+
+Step-by-step flow:
+
+1. The TasksComponent initializes.
+2. The component calls the TaskService.
+3. The service sends a GET request to the Rust backend.
+4. The Rust route matches the request.
+5. The Rust handler queries PostgreSQL.
+6. The database returns task records.
+7. Rust sends a JSON response.
+8. Angular updates the tasks array.
+9. The UI re-renders automatically.
+
+This demonstrates complete request–response lifecycle.
+
+---
+
+## 6. Reflection on Modular Architecture
+
+Angular’s modular structure improves scalability because:
+
+- Components focus only on UI logic.
+- Services handle API and business logic.
+- Routing manages navigation separately.
+- Each feature can be expanded independently.
+
+Benefits:
+
+- Clear separation of concerns
+- Easier debugging
+- Better maintainability
+- Improved scalability
+- Reusable components
+
+As the application grows (e.g., adding users, dashboards, authentication), this modular approach prevents code duplication and keeps the project organized.

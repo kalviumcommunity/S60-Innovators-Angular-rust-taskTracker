@@ -21,6 +21,7 @@
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Row};
+use actix_cors::Cors;
 
 #[derive(Serialize)]
 struct Task {
@@ -92,8 +93,21 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to connect to database");
 
+    // HttpServer::new(move || {
+    //     App::new()
+    //         .app_data(web::Data::new(pool.clone()))
+    //         .route("/tasks", web::post().to(create_task))
+    //         .route("/tasks", web::get().to(get_tasks))
+    // })
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:4200")
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![actix_web::http::header::CONTENT_TYPE])
+            .max_age(3600);
+    
         App::new()
+            .wrap(cors)
             .app_data(web::Data::new(pool.clone()))
             .route("/tasks", web::post().to(create_task))
             .route("/tasks", web::get().to(get_tasks))
